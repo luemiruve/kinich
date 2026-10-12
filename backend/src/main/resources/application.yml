@@ -1,0 +1,76 @@
+# Los valores sensibles llegan por variables de entorno. En desarrollo local se pueden
+# definir en backend/.env (ignorado por Git); ver backend/.env.example.
+spring:
+  application:
+    name: kinich-backend
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${KINICH_DB_URL}
+    username: ${KINICH_DB_USERNAME}
+    password: ${KINICH_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB        # 10 485 760 bytes
+      max-request-size: 11MB
+      # Mayor que el máximo: la subida se procesa en memoria y Tomcat nunca escribe el original (con EXIF/GPS)
+      # en su directorio temporal.
+      file-size-threshold: 11MB
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+  # Detrás de un proxy inverso con HTTPS en producción: KINICH_FORWARD_HEADERS=native
+  forward-headers-strategy: ${KINICH_FORWARD_HEADERS:none}
+  tomcat:
+    # Permite leer y descartar un cuerpo demasiado grande para responder 413 en lugar de cortar la conexión.
+    max-swallow-size: 16MB
+
+kinich:
+  jwt:
+    secret: ${KINICH_JWT_SECRET}
+    ttl: ${KINICH_JWT_TTL:PT4H}
+    issuer: kinich
+  cookie:
+    name: kinich_session
+    secure: ${KINICH_COOKIE_SECURE:true}
+  cors-allowed-origins: ${KINICH_CORS_ALLOWED_ORIGINS:}
+  login-rate-limit:
+    max-failures-per-email: 5
+    max-failures-per-ip: 20
+    window: PT15M
+    max-tracked-keys: 10000
+  bootstrap-admin:
+    email: ${KINICH_ADMIN_EMAIL:}
+    password: ${KINICH_ADMIN_PASSWORD:}
+    full-name: ${KINICH_ADMIN_FULL_NAME:}
+  brand:
+    # Límites técnicos del SVG de identidad (no son reglas de negocio): acotan el trabajo del sanitizador.
+    svg:
+      max-bytes: 524288      # 512 KB
+      max-elements: 10000
+      max-depth: 32
+  media:
+    storage-dir: ${KINICH_MEDIA_DIR:}
+    # libvips por CLI. La calidad es un parámetro técnico, no una regla de negocio.
+    processing:
+      command: ${KINICH_VIPS_COMMAND:vips}
+      work-dir: ${KINICH_MEDIA_WORK_DIR:${java.io.tmpdir}}
+      timeout: 60s
+      avif-quality: 50
+      jpeg-quality: 82
+      max-concurrent: 2

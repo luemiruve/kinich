@@ -1,0 +1,55 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDE / editores
+.idea/
+*.iml
+.vscode/
+*.swp
+.project
+.classpath
+.settings/
+.factorypath
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+application-local.*
+secrets/
+
+# Java / Maven
+target/
+*.class
+*.log
+hs_err_pid*
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Archivos subidos, datos locales y copias de seguridad
+uploads/
+storage/
+# Los paquetes Java llamados «storage» son código fuente, no datos locales.
+!backend/src/main/java/com/kinich/media/storage/
+!backend/src/test/java/com/kinich/media/storage/
+*.dump
+*.backup
+*.sql.gz
+*.tar.gz
+*.zip
+
+# Material interno que no forma parte del producto
+/diseño/
+/diseno/
+.superpowers/
+.claude/
+.playwright-mcp/

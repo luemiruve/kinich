@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+/*
+ * Sistema visual "Luminous Editorial".
+ * Radio 0, sin sombras ni gradientes; la profundidad se marca con tono y bordes finos.
+ * Modo claro y oscuro siguen la preferencia del sistema.
+ */
+:root {
+  color-scheme: light;
+
+  /* Paleta clara (Luminous Editorial). */
+  --kn-surface: #fbf9f6;
+  --kn-surface-lowest: #ffffff;
+  --kn-surface-low: #f5f3f0;
+  --kn-surface-container: #efeeeb;
+  --kn-on-surface: #1b1c1a;
+  --kn-on-surface-variant: #494740;
+  --kn-outline: #7a776f;
+  --kn-outline-variant: #cac6bd;
+  --kn-primary-container: #232220;
+  --kn-primary: #0c0c0a;
+  --kn-on-primary: #ffffff;
+  --kn-secondary: #745a38;
+  /* Tonos funcionales de error: no forman parte de la paleta de identidad. */
+  --kn-error: #ba1a1a;
+  --kn-error-container: #ffdad6;
+  --kn-on-error-container: #93000a;
+  /* Panel editorial del login: oscuro en ambos modos. */
+  --kn-feature-panel: #232220;
+  --kn-on-feature-panel: #fbf9f6;
+  --kn-on-feature-panel-muted: #cac6c2;
+}
+
+/* Modo oscuro derivado solo de tokens existentes (sin colores nuevos de identidad). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --kn-surface: #1b1c1a; /* on-surface */
+    --kn-surface-lowest: #0c0c0a; /* primary */
+    --kn-surface-low: #232220; /* primary-container */
+    --kn-surface-container: #30312f; /* inverse-surface */
+    --kn-on-surface: #f2f0ed; /* inverse-on-surface */
+    --kn-on-surface-variant: #cac6bd; /* outline-variant */
+    --kn-outline: #7a776f; /* outline */
+    --kn-outline-variant: #494740; /* on-surface-variant */
+    --kn-primary-container: #f2f0ed; /* inverse-on-surface */
+    --kn-primary: #cac6c2; /* inverse-primary */
+    --kn-on-primary: #1b1c1a; /* on-surface */
+    --kn-secondary: #fedaae; /* secondary-container */
+    --kn-error: #ffb4ab;
+    --kn-error-container: #93000a;
+    --kn-on-error-container: #ffdad6;
+    --kn-feature-panel: #0c0c0a; /* primary */
+  }
+}
+
+@theme inline {
+  --color-surface: var(--kn-surface);
+  --color-surface-lowest: var(--kn-surface-lowest);
+  --color-surface-low: var(--kn-surface-low);
+  --color-surface-container: var(--kn-surface-container);
+  --color-on-surface: var(--kn-on-surface);
+  --color-on-surface-variant: var(--kn-on-surface-variant);
+  --color-outline: var(--kn-outline);
+  --color-outline-variant: var(--kn-outline-variant);
+  --color-primary-container: var(--kn-primary-container);
+  --color-primary: var(--kn-primary);
+  --color-on-primary: var(--kn-on-primary);
+  --color-secondary: var(--kn-secondary);
+  --color-error: var(--kn-error);
+  --color-error-container: var(--kn-error-container);
+  --color-on-error-container: var(--kn-on-error-container);
+  --color-feature-panel: var(--kn-feature-panel);
+  --color-on-feature-panel: var(--kn-on-feature-panel);
+  --color-on-feature-panel-muted: var(--kn-on-feature-panel-muted);
+}
+
+@theme {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Pantallas bajas: teléfonos pequeños y teléfonos en horizontal. */
+@custom-variant short (@media (max-height: 40rem));
+
+@layer base {
+  /* Evita que la cabecera sticky de /admin/inicio tape el elemento enfocado (WCAG 2.4.11). */
+  html {
+    scroll-padding-top: calc(var(--kn-sticky-header, 0px) + 0.5rem);
+  }
+
+  body {
+    @apply bg-surface font-sans text-on-surface antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--kn-secondary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility label-caps {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

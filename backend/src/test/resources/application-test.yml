@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: ${KINICH_TEST_DB_URL:jdbc:postgresql://localhost:5432/kinich_test}
+
+kinich:
+  media:
+    storage-dir: ${java.io.tmpdir}/kinich-media-test
+    processing:
+      work-dir: ${java.io.tmpdir}/kinich-media-work-test
+  jwt:
+    # Clave solo para pruebas; no se usa en ningún entorno real.
+    secret: dGVzdC1vbmx5LWtleS1raW5pY2gtbm90LWEtcmVhbC1zZWNyZXQtMDEyMzQ1Njc4OQ==
+  cookie:
+    secure: true
+  bootstrap-admin:
+    email: ""
