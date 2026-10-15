@@ -24,6 +24,7 @@ HTTP ↔ DTO; las reglas, validaciones y transacciones viven en los servicios.
 | `auth` | Inicio y cierre de sesión, JWT en cookie, limitador de intentos |
 | `user` | Usuarios y alta de la cuenta de administración inicial |
 | `content` | Secciones de la portada: textos, elementos con imagen, cabeceras, categorías, borrador y publicación |
+| `portfolio` | Portafolio: proyectos con portada y galería, borrador por proyecto, instantánea publicada, orden y API pública |
 | `media` | Imágenes: validación, procesamiento con libvips, almacenamiento y entrega |
 | `settings` | Configuración de la instalación: identidad, contacto y redes sociales |
 | `brand` | Logotipo SVG: sanitización, almacenamiento y entrega |
@@ -43,6 +44,16 @@ HTTP ↔ DTO; las reglas, validaciones y transacciones viven en los servicios.
 Cada sección de la portada tiene un borrador y una instantánea publicada. Publicar copia el borrador de **una**
 sección a la instantánea en una sola transacción; la API pública solo lee instantáneas. La configuración de la
 instalación (`settings`), en cambio, se aplica al guardar.
+
+### Portafolio: borrador y publicación
+
+Cada proyecto es un agregado (datos, portada con encuadre 4:5 y galería de 1 a 60 imágenes) con su propio borrador y su
+instantánea publicada; se publica **por proyecto**. El orden también vive en el borrador y solo pasa al sitio con
+«Publicar orden». Retirar un proyecto (ocultarlo) se aplica al publicarlo; eliminarlo borra borrador e instantánea de
+inmediato. Los textos de cabecera y cierre de la página se gestionan como secciones editoriales (`PAGE_HEADER` y
+`CLOSING_CTA` de la página `PORTFOLIO`). Las publicaciones se serializan con un bloqueo de tabla; guardar o publicar con
+una versión desactualizada responde `409`. El esquema llega hasta la migración V12 (V11 amplía el catálogo de páginas,
+V12 crea las tablas de proyectos).
 
 ### Errores
 
@@ -76,7 +87,8 @@ subida → validación del formato real → original privado → libvips → rep
   nunca modifica el original.
 - El almacenamiento está detrás de una interfaz (`MediaStorage`); la implementación incluida usa el sistema de
   archivos local (`KINICH_MEDIA_DIR`).
-- La API pública solo sirve representaciones de elementos publicados.
+- La API pública solo sirve representaciones web (`WEB`) de imágenes que estén en un elemento publicado de Inicio, en la
+  portada de un proyecto publicado o en su galería publicada. Un borrador nunca hace público un archivo.
 
 ## Logotipo SVG
 
@@ -96,12 +108,18 @@ El logotipo es un recurso de marca independiente de la biblioteca de imágenes:
 |---|---|
 | `api/` | Cliente HTTP y llamadas a la API (gestiona el token CSRF) |
 | `pages/` | Páginas: portada, acceso, panel, edición de Inicio, configuración |
+| `portfolio/` | Páginas públicas del portafolio: listado con filtros y detalle de proyecto |
 | `home/` | Secciones de la portada |
 | `admin/` | Componentes del panel (formularios, selector de imágenes, encuadre, configuración) |
+| `admin/portfolio/` | Lista, orden y editor de proyectos del portafolio |
 | `components/` | Componentes reutilizables (layout, editoriales, formulario, logotipo) |
 | `session/`, `routes/`, `site/` | Sesión del panel, rutas protegidas e identidad pública |
 
-Rutas: `/` (portada), `/admin/login`, `/admin`, `/admin/inicio` y `/admin/configuracion`.
+Rutas públicas: `/` (portada), `/portafolio` (listado, filtro con `?categoria=`) y `/portafolio/:slug` (detalle). La
+cabecera del sitio ofrece la navegación **Inicio** y **Portafolio**, con menú desplegable en móvil.
+
+Rutas del panel: `/admin/login`, `/admin`, `/admin/inicio`, `/admin/configuracion`, `/admin/portafolio`,
+`/admin/portafolio/nuevo` y `/admin/portafolio/:id`.
 
 ## API
 
@@ -113,6 +131,8 @@ Todas las rutas están bajo `/api`. Las de administración requieren sesión y, 
 | `GET` | `/auth/me` | Usuario de la sesión |
 | `GET` | `/public/site` | Identidad, contacto y redes visibles |
 | `GET` | `/public/pages/home` | Portada publicada |
+| `GET` | `/public/pages/portfolio` | Portafolio publicado: cabecera, cierre, tarjetas en orden y categorías presentes |
+| `GET` | `/public/portfolio/projects/{slug}` | Detalle publicado de un proyecto (404 idéntico si es borrador, retirado o no existe) |
 | `GET` | `/public/media/files/{id}`, `/public/brand-assets/{id}` | Imágenes y logotipo publicados |
 | `GET` | `/admin/pages/home` | Borrador de la portada |
 | `POST`, `PUT`, `PATCH`, `DELETE` | `/admin/pages/home/sections/{sección}/texts…` | Bloques de texto (crear, editar, visibilidad, orden, eliminar) |
@@ -125,3 +145,11 @@ Todas las rutas están bajo `/api`. Las de administración requieren sesión y, 
 | `PUT` | `/admin/settings/identity`, `/admin/settings/contact` | Identidad y contacto |
 | `PUT`, `DELETE` | `/admin/settings/logos/{primary\|on-dark}` | Subir o retirar el logotipo |
 | `POST`, `PUT`, `DELETE` | `/admin/settings/social-links…` | Redes sociales y su orden |
+| `GET`, `POST` | `/admin/portfolio/projects` | Lista de proyectos (con `orderModified`) y alta |
+| `GET`, `PUT`, `DELETE` | `/admin/portfolio/projects/{id}` | Leer, guardar el borrador completo y eliminar (inmediato) |
+| `PATCH` | `/admin/portfolio/projects/{id}/visibility` | Retirar (efectivo al publicar el proyecto) o mostrar (cancela una retirada pendiente; en un proyecto nunca publicado, efectivo al publicarlo) |
+| `PUT` | `/admin/portfolio/projects/{id}/publication` | Publicar el proyecto |
+| `PUT` | `/admin/portfolio/projects/order` | Guardar el orden en el borrador |
+| `PUT` | `/admin/portfolio/order/publication` | Publicar el orden |
+| `GET` | `/admin/pages/portfolio` | Cabecera y cierre de la página, en borrador |
+| `PUT` | `/admin/pages/portfolio/sections/{sección}/heading`, `/publication` | Editar y publicar esos textos |

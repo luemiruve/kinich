@@ -65,7 +65,7 @@ class PublicationIntegrationTest {
         drafts.create("values", "Ey", "Tí", "Tres", actor);
         drafts.changeVisibility("values", hidden.getId(), true, hidden.getVersion(), actor);
 
-        publication.publish("values", revision(), actor);
+        publication.publish(PageKey.HOME, "values", revision(), actor);
 
         assertThat(publicTexts("values")).extracting(PublicTextBlock::body).containsExactly("Uno", "Tres");
         assertThat(jdbc.queryForList("SELECT position FROM published_text_contents ORDER BY position", Integer.class))
@@ -76,7 +76,7 @@ class PublicationIntegrationTest {
     void publishingRecordsWhoAndWhenAndClearsPendingChanges() {
         drafts.create("values", null, null, "Uno", actor);
 
-        Section section = publication.publish("values", revision(), actor);
+        Section section = publication.publish(PageKey.HOME, "values", revision(), actor);
 
         assertThat(section.getPublishedRevision()).isEqualTo(section.getDraftRevision());
         assertThat(section.getPublishedBy()).isEqualTo(actor);
@@ -87,11 +87,11 @@ class PublicationIntegrationTest {
     @Test
     void aStaleRevisionConflictsAndKeepsThePreviousSnapshot() {
         drafts.create("values", null, null, "Publicado", actor);
-        publication.publish("values", revision(), actor);
+        publication.publish(PageKey.HOME, "values", revision(), actor);
         long previewed = revision();
         drafts.create("values", null, null, "Añadido en otra pestaña", actor);
 
-        assertThatThrownBy(() -> publication.publish("values", previewed, actor))
+        assertThatThrownBy(() -> publication.publish(PageKey.HOME, "values", previewed, actor))
                 .isInstanceOfSatisfying(ApiProblemException.class,
                         ex -> assertThat(ex.getCode()).isEqualTo(ErrorCode.VERSION_CONFLICT));
         assertThat(publicTexts("values")).extracting(PublicTextBlock::body).containsExactly("Publicado");
@@ -100,12 +100,12 @@ class PublicationIntegrationTest {
     @Test
     void deletingADraftKeepsItPublicUntilTheNextPublication() {
         TextContent block = drafts.create("values", null, null, "Uno", actor);
-        publication.publish("values", revision(), actor);
+        publication.publish(PageKey.HOME, "values", revision(), actor);
 
         drafts.delete("values", block.getId(), block.getVersion(), actor);
         assertThat(publicTexts("values")).hasSize(1);
 
-        publication.publish("values", revision(), actor);
+        publication.publish(PageKey.HOME, "values", revision(), actor);
         assertThat(publicTexts("values")).isEmpty();
     }
 
@@ -114,7 +114,7 @@ class PublicationIntegrationTest {
         TextContent block = drafts.create("values", null, null, "Uno", actor);
         assertThat(onlyAdminBlock().status()).isEqualTo(ContentStatus.DRAFT);
 
-        publication.publish("values", revision(), actor);
+        publication.publish(PageKey.HOME, "values", revision(), actor);
         assertThat(onlyAdminBlock().status()).isEqualTo(ContentStatus.PUBLISHED);
         assertThat(onlyAdminBlock().modified()).isFalse();
 
@@ -161,7 +161,7 @@ class PublicationIntegrationTest {
                 results.add(executor.submit(() -> {
                     start.await();
                     try {
-                        publication.publish("values", previewed, actor);
+                        publication.publish(PageKey.HOME, "values", previewed, actor);
                         return true;
                     } catch (ApiProblemException | ObjectOptimisticLockingFailureException expected) {
                         return false;

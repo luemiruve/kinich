@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Publica UNA sección (de textos o de elementos audiovisuales): sustituye su instantánea por el borrador visible,
  * en una sola transacción. Si el borrador cambió desde la previsualización (revision distinta) no se publica nada.
+ * Las secciones de Portafolio solo tienen cabecera: publicar fija la cabecera y no toca ninguna otra sección.
  */
 @Slf4j(topic = "kinich.content")
 @Service
@@ -31,8 +32,8 @@ public class SectionPublicationService {
     private final Clock clock;
 
     @Transactional
-    public Section publish(String slug, long revision, UUID actorId) {
-        Section section = sections.require(slug);
+    public Section publish(PageKey page, String slug, long revision, UUID actorId) {
+        Section section = sections.find(page, slug);
         if (section.getDraftRevision() != revision) {
             throw ApiProblemException.versionConflict();
         }
@@ -40,8 +41,11 @@ public class SectionPublicationService {
         // sección (bloquea la fila), así el segundo publicador concurrente falla por bloqueo optimista (409)
         // en lugar de chocar con la restricción única de posición (500).
         section.markPublished(actorId, clock.instant());
-        int count = TextSectionPolicy.isTextSection(section.getSectionKey()) ? publishTexts(section) : publishItems(section);
-        log.info("Sección publicada (section={}, revision={}, blocks={}, userId={})", slug, revision, count, actorId);
+        SectionKey key = section.getSectionKey();
+        int count = !EditableSectionLookup.hasContent(page, key) ? 0
+                : TextSectionPolicy.isTextSection(key) ? publishTexts(section) : publishItems(section);
+        log.info("Sección publicada (page={}, section={}, revision={}, blocks={}, userId={})", page.slug(), slug,
+                revision, count, actorId);
         return section;
     }
 

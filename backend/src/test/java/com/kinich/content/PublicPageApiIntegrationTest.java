@@ -33,6 +33,7 @@ class PublicPageApiIntegrationTest {
     @Autowired private UserRepository users;
     @Autowired private TextContentService drafts;
     @Autowired private SectionPublicationService publication;
+    @Autowired private SectionHeadingService headings;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +43,7 @@ class PublicPageApiIntegrationTest {
         drafts.create("values", null, null, "Publicado", actor);
         long revision = jdbc.queryForObject("SELECT draft_revision FROM sections WHERE id = ?", Long.class,
                 ContentTestData.VALUES_ID);
-        publication.publish("values", revision, actor);
+        publication.publish(PageKey.HOME, "values", revision, actor);
         drafts.create("values", null, null, "Borrador sin publicar", actor);
     }
 
@@ -58,6 +59,19 @@ class PublicPageApiIntegrationTest {
                 .andExpect(jsonPath("$.pageKey").value("home"))
                 .andExpect(jsonPath("$.sections[*].sectionKey").value(contains("hero", "editorial-note", "disciplines",
                         "values", "featured-selection", "closing-cta")));
+    }
+
+    @Test
+    void doesNotIncludeThePortfolioSections() throws Exception {
+        UUID actor = users.findAll().getFirst().getId();
+        Section header = headings.update(PageKey.PORTFOLIO, "page-header", null, "Cabecera de Portafolio", null, 0,
+                actor);
+        publication.publish(PageKey.PORTFOLIO, "page-header", header.getDraftRevision(), actor);
+
+        mvc.perform(get("/api/public/pages/home"))
+                .andExpect(jsonPath("$.sections.length()").value(6))
+                .andExpect(content().string(not(containsString("page-header"))))
+                .andExpect(content().string(not(containsString("Cabecera de Portafolio"))));
     }
 
     @Test

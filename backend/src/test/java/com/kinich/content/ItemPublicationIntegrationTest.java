@@ -63,7 +63,7 @@ class ItemPublicationIntegrationTest {
         assertThat(publicPage.load().sections().stream().filter(s -> s.sectionKey().equals("disciplines"))
                 .findFirst().orElseThrow().items()).isEmpty();
 
-        publication.publish("disciplines", revision("disciplines"), actor);
+        publication.publish(PageKey.HOME, "disciplines", revision("disciplines"), actor);
 
         PublicItem item = onlyPublicItem("disciplines");
         assertThat(item.category()).isEqualTo("Cobertura social");
@@ -81,17 +81,17 @@ class ItemPublicationIntegrationTest {
     void hiddenItemsAreNotPublishedAndStaleRevisionConflicts() {
         ContentItem item = items.create("featured-selection", new ItemInput(media, "alt", null, null, "T", null, null, null), actor);
         items.changeVisibility("featured-selection", item.getId(), true, item.getVersion(), actor);
-        publication.publish("featured-selection", revision("featured-selection"), actor);
+        publication.publish(PageKey.HOME, "featured-selection", revision("featured-selection"), actor);
         assertThat(publicPage.load().sections().stream().filter(s -> s.sectionKey().equals("featured-selection"))
                 .findFirst().orElseThrow().items()).isEmpty();
-        assertThatThrownBy(() -> publication.publish("featured-selection", 0, actor))
+        assertThatThrownBy(() -> publication.publish(PageKey.HOME, "featured-selection", 0, actor))
                 .isInstanceOfSatisfying(ApiProblemException.class, e -> assertThat(e.getCode()).isEqualTo(ErrorCode.VERSION_CONFLICT));
     }
 
     @Test
     void adminViewDerivesStatusAndModifiedIncludingTheImage() {
         ContentItem item = items.create("hero", new ItemInput(media, "alt", null, "Edición 2024", null, null, null, null), actor);
-        publication.publish("hero", revision("hero"), actor);
+        publication.publish(PageKey.HOME, "hero", revision("hero"), actor);
         UUID other = MediaTestData.readyImage(jdbc, 4, 3);
         ContentItem current = items.update("hero", item.getId(), new ItemInput(other, "alt", null, "Edición 2024", null, null, null, null),
                 item.getVersion(), actor);
@@ -110,7 +110,7 @@ class ItemPublicationIntegrationTest {
         jdbc.update("INSERT INTO text_contents (id, section_id, body, position, created_at, updated_at) "
                 + "VALUES (?, ?, 'Nota', 1, now(), now())", UUID.randomUUID(), ContentTestData.EDITORIAL_NOTE_ID);
         jdbc.update("UPDATE sections SET draft_revision = 1 WHERE id = ?", ContentTestData.EDITORIAL_NOTE_ID);
-        publication.publish("editorial-note", 1, actor);
+        publication.publish(PageKey.HOME, "editorial-note", 1, actor);
         assertThat(publicPage.load().sections().stream().filter(s -> s.sectionKey().equals("editorial-note"))
                 .findFirst().orElseThrow().texts()).hasSize(1);
     }
@@ -121,7 +121,7 @@ class ItemPublicationIntegrationTest {
         Crop right = new Crop(1 - 853.6 / 1600.0, 0, 853.6 / 1600.0, 1.0);
         ContentItem item = items.create("disciplines", new ItemInput(media, "Mesa", null, null, "Eventos", null, left, null),
                 actor);
-        publication.publish("disciplines", revision("disciplines"), actor);
+        publication.publish(PageKey.HOME, "disciplines", revision("disciplines"), actor);
 
         ContentItem moved = items.update("disciplines", item.getId(),
                 new ItemInput(media, "Mesa", null, null, "Eventos", null, right, null), item.getVersion(), actor);
@@ -133,14 +133,14 @@ class ItemPublicationIntegrationTest {
         assertThat(draft.image().crop()).isEqualTo(right);
         assertThat(moved.getMediaId()).isEqualTo(media);
 
-        publication.publish("disciplines", revision("disciplines"), actor);
+        publication.publish(PageKey.HOME, "disciplines", revision("disciplines"), actor);
         assertThat(onlyPublicItem("disciplines").image().crop()).isEqualTo(right);
     }
 
     @Test
     void heroAndClosingPublishTheirFocalPoint() {
         items.create("hero", new ItemInput(media, "alt", null, null, null, null, null, new FocalPoint(0.2, 0.7)), actor);
-        publication.publish("hero", revision("hero"), actor);
+        publication.publish(PageKey.HOME, "hero", revision("hero"), actor);
         PublicItem hero = onlyPublicItem("hero");
         assertThat(hero.image().mediaPosition()).isEqualTo(new FocalPoint(0.2, 0.7));
         assertThat(hero.image().crop()).isNull();

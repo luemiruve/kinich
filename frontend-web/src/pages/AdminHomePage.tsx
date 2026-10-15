@@ -6,7 +6,7 @@ import { fetchAdminSettings } from '@/api/adminSettings'
 import { Button } from '@/components/Button'
 import { useSession } from '@/session/useSession'
 
-/** Destino tras iniciar sesión: accesos a la edición de Inicio y a la configuración de la instalación. */
+/** Destino tras iniciar sesión: accesos a la edición de Inicio y Portafolio y a la configuración de la instalación. */
 export function AdminHomePage() {
   const { user, logout } = useSession()
   const [logoutFailed, setLogoutFailed] = useState(false)
@@ -59,6 +59,9 @@ export function AdminHomePage() {
         <nav aria-label="Panel" className="mt-6 flex flex-wrap gap-x-6">
           <Link to="/admin/inicio" className="inline-flex min-h-11 items-center label-caps underline decoration-secondary underline-offset-4">
             Editar Inicio
+          </Link>
+          <Link to="/admin/portafolio" className="inline-flex min-h-11 items-center label-caps underline decoration-secondary underline-offset-4">
+            Editar Portafolio
           </Link>
           <Link to="/admin/configuracion" className="inline-flex min-h-11 items-center label-caps underline decoration-secondary underline-offset-4">
             Configuración

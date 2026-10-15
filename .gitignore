@@ -1,6 +1,8 @@
 # Sistema operativo
 .DS_Store
 Thumbs.db
+# Icono personalizado de carpeta de macOS (el nombre termina en \r)
+Icon
 
 # IDE / editores
 .idea/
@@ -16,6 +18,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+/.env
+/backend/.env
 *.pem
 *.key
 *.p12
@@ -38,6 +42,7 @@ coverage/
 # Archivos subidos, datos locales y copias de seguridad
 uploads/
 storage/
+backups/
 # Los paquetes Java llamados «storage» son código fuente, no datos locales.
 !backend/src/main/java/com/kinich/media/storage/
 !backend/src/test/java/com/kinich/media/storage/
@@ -47,9 +52,11 @@ storage/
 *.tar.gz
 *.zip
 
-# Material interno que no forma parte del producto
+# Material local del workspace que nunca se publica (diseños, documentación interna y herramientas)
 /diseño/
 /diseno/
+/data-trash
+/docs-internos/
 .superpowers/
 .claude/
 .playwright-mcp/

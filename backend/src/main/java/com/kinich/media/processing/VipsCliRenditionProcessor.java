@@ -37,6 +37,9 @@ public class VipsCliRenditionProcessor implements ImageRenditionProcessor {
     private static final String OUTPUT = "output.txt";
     // La salida numérica de getpoint/min/max es corta; más es una anomalía.
     private static final int MAX_OUTPUT_BYTES = 256;
+    // Sin altura, vips thumbnail encaja en una caja ancho×ancho (una vertical saldría más estrecha); una altura
+    // muy grande deja que solo el ancho limite la rendition.
+    private static final String UNBOUNDED_HEIGHT = "100000";
 
     private final MediaProcessingProperties properties;
     private final ImageInspector inspector;
@@ -71,7 +74,8 @@ public class VipsCliRenditionProcessor implements ImageRenditionProcessor {
                 for (int width : RenditionPlan.widthsFor(originalWidth)) {
                     String output = "w" + width + extension(target);
                     if (run(dir, properties.command(), "thumbnail", DECODED, output + saveOptions(target),
-                            String.valueOf(width), "--size", "down", "--export-profile", "srgb") != 0) {
+                            String.valueOf(width), "--height", UNBOUNDED_HEIGHT, "--size", "down",
+                            "--export-profile", "srgb") != 0) {
                         throw new MediaProcessingException();
                     }
                     byte[] content = Files.readAllBytes(dir.resolve(output));

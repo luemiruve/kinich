@@ -13,7 +13,7 @@ public enum ItemFraming {
 
     CROP_4_5 {
         @Override
-        Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height) {
+        public Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height) {
             if (mediaPosition != null) {
                 throw invalid("mediaPosition", NOT_ALLOWED);
             }
@@ -34,7 +34,7 @@ public enum ItemFraming {
 
     FOCAL_POINT {
         @Override
-        Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height) {
+        public Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height) {
             if (crop != null) {
                 throw invalid("crop", NOT_ALLOWED);
             }
@@ -56,7 +56,7 @@ public enum ItemFraming {
     private static final String OUT_OF_BOUNDS = "está fuera de la imagen";
 
     /** Valida el encuadre recibido contra las dimensiones del original o devuelve el centrado. */
-    abstract Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height);
+    public abstract Framing resolve(Crop crop, FocalPoint mediaPosition, int width, int height);
 
     /** El lado limitante vale exactamente 1 y su origen 0 (sin errores de redondeo en los bordes). */
     private static Crop centered(int width, int height) {

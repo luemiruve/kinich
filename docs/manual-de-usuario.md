@@ -2,7 +2,7 @@
 
 Kinich tiene dos partes:
 
-- **Sitio público** (`/`): la portada del negocio, visible para cualquier visitante.
+- **Sitio público** (`/`, `/portafolio`): la portada y el portafolio del negocio, visibles para cualquier visitante.
 - **Panel de administración** (`/admin`): donde el estudio configura su identidad y prepara el contenido.
 
 El administrador edita contenido, no el diseño: el orden de las secciones, su estructura y su presentación vienen
@@ -107,6 +107,52 @@ El encuadre no modifica la imagen original: puedes cambiarlo cuando quieras.
 - Kinich guarda el original de forma privada y genera versiones optimizadas para la web. Los datos de cámara y de
   ubicación (EXIF, GPS) nunca se publican.
 - Sube una exportación pensada para web, no el archivo de máxima resolución de la cámara.
+
+## Portafolio (`/admin/portafolio`)
+
+El portafolio muestra proyectos terminados (sesiones, eventos, colecciones). Cada proyecto se trabaja como borrador y se
+**publica por separado**; el sitio público (`/portafolio`) solo cambia al publicar.
+
+> **Consentimiento.** Si los proyectos muestran a personas, obtener su consentimiento para publicar las fotografías es
+> responsabilidad de cada instalación. Kinich no lo gestiona.
+
+### Crear un proyecto
+
+1. Pulsa **Nuevo proyecto** (máximo 200 proyectos).
+2. Completa **Título** (obligatorio), **Antetítulo**, **Categoría** y **Descripción** (opcionales).
+3. **Portada**: elige una imagen, ajusta el encuadre 4:5 (**Acercar** y posiciones horizontal y vertical) y escribe su
+   **texto alternativo** (obligatorio).
+4. **Galería**: añade de 1 a 60 imágenes. Cada una necesita **texto alternativo** (obligatorio) y admite un **pie de
+   foto** opcional. Se ordenan con **Subir** y **Bajar**. Puedes repetir una imagen o usar la de la portada.
+5. **Guardar borrador**. Con **Previsualizar** ves el proyecto como se publicará.
+
+### Dirección (slug)
+
+La dirección del proyecto es `/portafolio/{slug}`. Se propone a partir del título y puedes editarla (minúsculas,
+números y guiones, hasta 80 caracteres; no puede coincidir con la de otro proyecto). **Cambiarla rompe la dirección
+anterior**: no hay redirecciones, así que los enlaces antiguos dejarán de funcionar al publicar.
+
+### Publicar, retirar y eliminar
+
+- **Publicar** copia el borrador de ese proyecto al sitio. Un proyecto nuevo entra al final del orden público.
+- **Retirar** oculta el proyecto en el borrador, pero **sigue visible hasta que lo publiques**; entonces desaparece del
+  sitio (sin borrarse). **Mostrar** cancela una retirada pendiente.
+- **Eliminar** pide confirmación y es **inmediato**: borra el borrador y lo publicado.
+
+### Orden
+
+Con las flechas **Subir** y **Bajar** de la lista se cambia el orden en el borrador; el sitio no cambia. Cuando difiere
+del publicado, aparece **Orden con cambios sin publicar**: pulsa **Publicar orden** para aplicarlo. Publicar un proyecto
+no publica el orden de los demás.
+
+### Textos de la página
+
+**Cabecera de la página** y **Cierre** se editan y publican por separado, igual que los textos de las secciones de la
+portada.
+
+### Categorías en el sitio
+
+El listado público ofrece un filtro con **Todos** y las categorías que tienen proyectos publicados.
 
 ## Ediciones simultáneas
 

@@ -102,6 +102,17 @@ class MediaServiceIntegrationTest {
     }
 
     @Test
+    void aPortraitImageGetsRenditionsConstrainedByWidthOnly() {
+        // Vertical (más alta que ancha): cada rendition conserva el ancho del plan, no la altura (antes daba 500).
+        MediaAsset saved = service.upload(ImageFixtures.jpeg(900, 1350), ACTOR);
+        assertThat(filesOf(saved, MediaFileRole.WEB)).extracting(MediaFile::getWidth).containsOnly(480, 768);
+        assertThat(filesOf(saved, MediaFileRole.WEB))
+                .allSatisfy(file -> assertThat(file.getHeight()).isEqualTo(Math.round(file.getWidth() * 1350 / 900f)));
+        MediaRenditions renditions = service.renditions(List.of(saved.getId()), MediaAudience.PUBLIC).get(saved.getId());
+        assertThat(renditions.fallback().candidates()).extracting(ImageCandidate::width).containsExactly(480, 768);
+    }
+
+    @Test
     void aTransparentImageFallsBackToPngInsteadOfJpeg() {
         MediaAsset saved = service.upload(ImageFixtures.transparentPng(900, 300), ACTOR);
         MediaRenditions renditions = service.renditions(List.of(saved.getId()), MediaAudience.PUBLIC).get(saved.getId());

@@ -34,13 +34,21 @@ public class AdminPageService {
 
     @Transactional(readOnly = true)
     public AdminPageResponse load() {
-        List<Section> all = sections.findByPageKeyOrderByPosition(PageKey.HOME);
+        return load(PageKey.HOME);
+    }
+
+    /** En Portafolio las secciones solo tienen cabecera: textos y elementos salen vacíos y no editables. */
+    @Transactional(readOnly = true)
+    public AdminPageResponse load(PageKey page) {
+        List<Section> all = sections.findByPageKeyOrderByPosition(page);
         List<UUID> textSectionIds = all.stream()
-                .filter(section -> TextSectionPolicy.isTextSection(section.getSectionKey()))
+                .filter(section -> EditableSectionLookup.hasContent(page, section.getSectionKey())
+                        && TextSectionPolicy.isTextSection(section.getSectionKey()))
                 .map(Section::getId)
                 .toList();
         List<UUID> itemSectionIds = all.stream()
-                .filter(section -> ItemSectionPolicy.isItemSection(section.getSectionKey()))
+                .filter(section -> EditableSectionLookup.hasContent(page, section.getSectionKey())
+                        && ItemSectionPolicy.isItemSection(section.getSectionKey()))
                 .map(Section::getId)
                 .toList();
         Map<UUID, List<TextContent>> draftsBySection = drafts.findBySectionIdInOrderByPosition(textSectionIds)
@@ -56,8 +64,8 @@ public class AdminPageService {
                 .filter(copy -> copy.getSourceId() != null)
                 .collect(Collectors.toMap(PublishedContentItem::getSourceId, Function.identity()));
         ItemLookups lookups = lookups(items);
-        return new AdminPageResponse(PageKey.HOME.slug(), all.stream()
-                .map(section -> toResponse(section, draftsBySection.getOrDefault(section.getId(), List.of()),
+        return new AdminPageResponse(page.slug(), all.stream()
+                .map(section -> toResponse(page, section, draftsBySection.getOrDefault(section.getId(), List.of()),
                         publishedBySource, itemsBySection.getOrDefault(section.getId(), List.of()),
                         publishedItemsBySource, lookups))
                 .toList());
@@ -85,20 +93,23 @@ public class AdminPageService {
     private record ItemLookups(Map<UUID, String> labels, Map<UUID, MediaAsset> assets,
                                Map<UUID, MediaRenditions> renditions) {}
 
-    private static AdminSectionResponse toResponse(Section section, List<TextContent> blocks,
+    private static AdminSectionResponse toResponse(PageKey page, Section section, List<TextContent> blocks,
                                                    Map<UUID, PublishedTextContent> publishedBySource,
                                                    List<ContentItem> items,
                                                    Map<UUID, PublishedContentItem> publishedItemsBySource,
                                                    ItemLookups lookups) {
         SectionKey key = section.getSectionKey();
-        boolean itemEditable = ItemSectionPolicy.isItemSection(key);
+        boolean hasContent = EditableSectionLookup.hasContent(page, key);
+        boolean textEditable = hasContent && TextSectionPolicy.isTextSection(key);
+        boolean itemEditable = hasContent && ItemSectionPolicy.isItemSection(key);
         ItemRules rules = itemEditable ? ItemSectionPolicy.rules(key) : null;
-        return new AdminSectionResponse(key.slug(), TextSectionPolicy.isTextSection(key),
-                TextSectionPolicy.maxBlocks(key), itemEditable, rules == null ? null : rules.maxItems(),
+        return new AdminSectionResponse(key.slug(), textEditable,
+                textEditable ? TextSectionPolicy.maxBlocks(key) : null, itemEditable,
+                rules == null ? null : rules.maxItems(),
                 rules == null ? List.of() : fieldNames(rules.allowed()),
                 rules == null ? List.of() : fieldNames(rules.required()),
                 rules == null ? null : rules.framing(),
-                SectionHeadingPolicy.fieldNames(key), section.draftHeading(),
+                SectionHeadingPolicy.fieldNames(page, key), section.draftHeading(),
                 section.getDraftRevision(), section.getPublishedRevision(),
                 section.hasUnpublishedChanges(), section.getPublishedAt(),
                 blocks.stream().map(block -> toResponse(block, publishedBySource.get(block.getId()))).toList(),

@@ -4,6 +4,7 @@ import com.kinich.media.MediaAsset;
 import com.kinich.media.MediaAudience;
 import com.kinich.media.MediaRenditions;
 import com.kinich.media.MediaService;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +26,24 @@ public class PublicPageService {
 
     @Transactional(readOnly = true)
     public PublicPageResponse load() {
-        List<Section> all = sections.findByPageKeyOrderByPosition(PageKey.HOME);
+        return load(PageKey.HOME);
+    }
+
+    /** Solo las cabeceras PUBLICADAS de una página (sin borradores); las secciones sin cabecera no aparecen. */
+    @Transactional(readOnly = true)
+    public Map<SectionKey, SectionHeading> headings(PageKey page) {
+        Map<SectionKey, SectionHeading> result = new EnumMap<>(SectionKey.class);
+        for (Section section : sections.findByPageKeyOrderByPosition(page)) {
+            SectionHeading heading = section.publishedHeading();
+            if (heading != null) {
+                result.put(section.getSectionKey(), heading);
+            }
+        }
+        return result;
+    }
+
+    private PublicPageResponse load(PageKey page) {
+        List<Section> all = sections.findByPageKeyOrderByPosition(page);
         List<UUID> sectionIds = all.stream().map(Section::getId).toList();
         Map<UUID, List<PublicTextBlock>> textsBySection = published
                 .findBySectionIdInOrderByPosition(sectionIds).stream()
@@ -41,7 +59,7 @@ public class PublicPageService {
                 .collect(Collectors.groupingBy(PublishedContentItem::getSectionId,
                         Collectors.mapping(copy -> toPublicItem(copy, assets.get(copy.getMediaId()),
                                 renditions.get(copy.getMediaId())), Collectors.toList())));
-        return new PublicPageResponse(PageKey.HOME.slug(), all.stream()
+        return new PublicPageResponse(page.slug(), all.stream()
                 .map(section -> new PublicSectionResponse(section.getSectionKey().slug(), section.publishedHeading(),
                         textsBySection.getOrDefault(section.getId(), List.of()),
                         itemsBySection.getOrDefault(section.getId(), List.of())))
