@@ -10,6 +10,8 @@ contacto y redes sociales) y prepara el contenido de su sitio desde el panel, si
 
 - **Portada administrable** con secciones fijas (Hero, Nota editorial, Disciplinas, Valores, Selección destacada y
   Cierre), editadas como borrador, previsualizadas y publicadas sección por sección.
+- **Portafolio**: proyectos con portada, galería, categorías y orden, publicados uno a uno y mostrados en un listado
+  con filtros y una página de detalle.
 - **Imágenes responsivas**: el original se conserva de forma privada y se generan representaciones optimizadas (AVIF
   con respaldo JPEG o PNG) en varios anchos, sin metadatos de cámara ni de ubicación.
 - **Encuadre por elemento** (recorte o punto focal) sin modificar nunca el original.
