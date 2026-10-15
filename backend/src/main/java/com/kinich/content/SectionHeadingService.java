@@ -23,13 +23,15 @@ public class SectionHeadingService {
     private final EditableSectionLookup sections;
 
     @Transactional
-    public Section update(String slug, String eyebrow, String title, String body, long revision, UUID actorId) {
-        Section section = sections.require(slug);
+    public Section update(PageKey page, String slug, String eyebrow, String title, String body, long revision,
+                          UUID actorId) {
+        Section section = sections.find(page, slug);
         if (section.getDraftRevision() != revision) {
             throw ApiProblemException.versionConflict();
         }
-        section.editHeading(normalize(SectionHeadingPolicy.fields(section.getSectionKey()), eyebrow, title, body));
-        log.info("Cabecera de sección editada (section={}, userId={})", slug, actorId);
+        Set<HeadingField> allowed = SectionHeadingPolicy.fields(page, section.getSectionKey());
+        section.editHeading(normalize(allowed, eyebrow, title, body));
+        log.info("Cabecera de sección editada (page={}, section={}, userId={})", page.slug(), slug, actorId);
         return section;
     }
 

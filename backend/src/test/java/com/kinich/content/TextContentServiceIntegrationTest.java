@@ -209,7 +209,7 @@ class TextContentServiceIntegrationTest {
                         if (delete) {
                             service.delete("values", first.getId(), first.getVersion(), ACTOR);
                         } else {
-                            publication.publish("values", revision, publisher);
+                            publication.publish(PageKey.HOME, "values", revision, publisher);
                         }
                     } catch (ApiProblemException | ObjectOptimisticLockingFailureException expected) {
                         // Pierde la carrera: 404/409 esperados.
