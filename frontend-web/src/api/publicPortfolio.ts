@@ -38,3 +38,37 @@ export async function fetchPublicPortfolio(signal?: AbortSignal): Promise<Public
   }
   return (await response.json()) as PublicPortfolioPage
 }
+
+/** Imagen de la galería: va con su proporción original (sin crop) y un pie de foto opcional. */
+export interface PublicProjectImage {
+  image: PublicImage
+  caption: string | null
+}
+
+export interface PublicProject {
+  slug: string
+  title: string
+  eyebrow: string | null
+  category: string | null
+  description: string | null
+  images: PublicProjectImage[]
+}
+
+/** Detalle público de un proyecto publicado. Un slug desconocido o no publicado responde 404 (ApiError.status). */
+export async function fetchPublicProject(slug: string, signal?: AbortSignal): Promise<PublicProject> {
+  let response: Response
+  try {
+    response = await fetch(`/api/public/portfolio/projects/${encodeURIComponent(slug)}`, {
+      credentials: 'omit',
+      headers: { Accept: 'application/json' },
+      signal,
+    })
+  } catch (error) {
+    if (signal?.aborted) throw error
+    throw new ApiError(0, 'No se pudo conectar con el servidor. Revisa tu conexión.')
+  }
+  if (!response.ok) {
+    throw await toApiError(response)
+  }
+  return (await response.json()) as PublicProject
+}

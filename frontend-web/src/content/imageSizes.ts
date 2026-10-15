@@ -39,3 +39,6 @@ export function scaleSizes(sizes: string, factor: number): string {
 
 /** Tarjeta de Portafolio: rejilla de 1 / 2 / 3 columnas (móvil / sm / lg). */
 export const PORTFOLIO_CARD_SIZES = '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'
+
+/** Galería del detalle de proyecto: 1 columna en móvil y 2 desde md. */
+export const PORTFOLIO_GALLERY_SIZES = '(min-width: 768px) 50vw, 100vw'
