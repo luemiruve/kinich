@@ -14,4 +14,6 @@ public interface PublishedPortfolioProjectRepository extends JpaRepository<Publi
     List<PublishedPortfolioProject> findAllByOrderByPositionAsc();
 
     boolean existsBySlugAndSourceIdNot(String slug, UUID sourceId);
+
+    boolean existsBySlug(String slug);
 }
