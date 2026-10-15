@@ -1,16 +1,20 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 
 import * as adminApi from '@/api/adminPage'
-import type { AdminSection, HeadingFieldName, HeadingValues } from '@/api/adminPage'
-import type { SectionKey } from '@/api/publicPage'
+import type { AdminSection, HeadingFieldName, HeadingSectionKey, HeadingValues, PageKey } from '@/api/adminPage'
 import { Button } from '@/components/Button'
 import { TextField } from '@/components/form/TextField'
 import { inputClassName, labelClassName } from '@/components/form/fieldStyles'
 
 import { useSectionEditor } from './useSectionEditor'
 
+/** Lo que el editor necesita de una sección, sea de Inicio o de Portafolio. */
+type HeadingSection = Pick<AdminSection, 'headingFields' | 'heading' | 'revision'> & { sectionKey: HeadingSectionKey }
+
 interface SectionHeadingEditorProps {
-  section: AdminSection
+  section: HeadingSection
+  /** Página de la sección; sin indicarla, Inicio (sus llamadas no cambian). */
+  page?: PageKey
   reload: () => Promise<void>
   notify: (message: string) => void
   onFormOpenChange: (sectionKey: string, open: boolean) => void
@@ -26,14 +30,15 @@ const LABELS: Record<HeadingFieldName, string> = {
   body: 'Texto (opcional)',
 }
 /** Secciones cuyo título no se ve en pantalla: lo anuncian los lectores de pantalla. */
-const SCREEN_READER_ONLY: Partial<Record<SectionKey, string>> = {
+const SCREEN_READER_ONLY: Partial<Record<HeadingSectionKey, string>> = {
+  'page-header': 'Es el título principal de la página. Si lo dejas vacío se usa «Portafolio».',
   hero: 'Lo anuncian los lectores de pantalla como título principal. Si lo dejas vacío se usa el nombre del negocio.',
   'editorial-note': 'No se muestra en pantalla: lo anuncian los lectores de pantalla.',
   values: 'No se muestra en pantalla: lo anuncian los lectores de pantalla.',
 }
 const HEADING_TARGET = { id: 'heading' }
 
-const toValues = (section: AdminSection): HeadingValues => ({
+const toValues = (section: HeadingSection): HeadingValues => ({
   eyebrow: section.heading.eyebrow ?? '',
   title: section.heading.title ?? '',
   body: section.heading.body ?? '',
@@ -43,7 +48,7 @@ const toValues = (section: AdminSection): HeadingValues => ({
  * Textos de cabecera de una sección (antes fijos en el código). Son contenido editorial: se guardan en el
  * borrador y se publican con la sección. Solo se ofrecen los campos que la sección admite.
  */
-export function SectionHeadingEditor({ section, reload, notify, onFormOpenChange, disabled }: SectionHeadingEditorProps) {
+export function SectionHeadingEditor({ section, page, reload, notify, onFormOpenChange, disabled }: SectionHeadingEditorProps) {
   const { editing, busy, fieldErrors, setFieldErrors, run, startEdit, close, root } = useSectionEditor<typeof HEADING_TARGET>({
     sectionKey: `${section.sectionKey}:heading`, reload, notify, onFormOpenChange,
   })
@@ -54,7 +59,10 @@ export function SectionHeadingEditor({ section, reload, notify, onFormOpenChange
 
   async function save(values: HeadingValues) {
     setFieldErrors({})
-    const ok = await run(() => adminApi.updateSectionHeading(section.sectionKey, values, section.revision), 'Borrador guardado')
+    const update = page
+      ? () => adminApi.updateSectionHeading(section.sectionKey, values, section.revision, page)
+      : () => adminApi.updateSectionHeading(section.sectionKey, values, section.revision)
+    const ok = await run(update, 'Borrador guardado')
     if (ok) close()
   }
 
@@ -80,7 +88,7 @@ export function SectionHeadingEditor({ section, reload, notify, onFormOpenChange
 }
 
 interface HeadingFormProps {
-  sectionKey: SectionKey
+  sectionKey: HeadingSectionKey
   fields: HeadingFieldName[]
   initial: HeadingValues
   fieldErrors: Record<string, string>

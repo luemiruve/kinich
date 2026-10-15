@@ -3,7 +3,8 @@ import { Button } from '@/components/Button'
 
 const dateFormat = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
 
-export function SectionPublishBar({ section, onPublish, disabled = false }: { section: AdminSection; onPublish: () => void; disabled?: boolean }) {
+export function SectionPublishBar({ section, onPublish, disabled = false }: {
+  section: Pick<AdminSection, 'publishedAt' | 'hasUnpublishedChanges'>; onPublish: () => void; disabled?: boolean }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-y border-outline-variant py-3">
       <p className="text-sm text-on-surface-variant">

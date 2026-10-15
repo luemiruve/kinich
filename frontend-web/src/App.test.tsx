@@ -8,6 +8,7 @@ import { ApiError } from '@/api/http'
 
 import * as settingsApi from '@/api/adminSettings'
 import * as publicApi from '@/api/publicPage'
+import * as portfolioApi from '@/api/publicPortfolio'
 import * as siteApi from '@/api/site'
 import { EMPTY_SITE } from '@/content/site'
 
@@ -19,6 +20,7 @@ vi.mock('@/api/auth', () => ({
   logout: vi.fn(),
 }))
 vi.mock('@/api/publicPage', () => ({ fetchPublicHome: vi.fn() }))
+vi.mock('@/api/publicPortfolio', () => ({ fetchPublicPortfolio: vi.fn(), fetchPublicProject: vi.fn() }))
 vi.mock('@/api/site', () => ({ fetchPublicSite: vi.fn() }))
 vi.mock('@/api/adminSettings', () => ({ fetchAdminSettings: vi.fn() }))
 
@@ -90,6 +92,41 @@ describe('portada pública', () => {
     renderAt('/no-existe')
 
     expect(await screen.findByRole('status')).toHaveTextContent('Cargando')
+  })
+})
+
+describe('rutas del portafolio', () => {
+  beforeEach(() => {
+    vi.mocked(siteApi.fetchPublicSite).mockResolvedValue({ ...EMPTY_SITE, businessName: 'Estudio de prueba' })
+  })
+
+  it('/portafolio es pública y no consulta la sesión', async () => {
+    vi.mocked(portfolioApi.fetchPublicPortfolio).mockResolvedValue({ pageHeader: null, closingCta: null, categories: [], projects: [] })
+
+    renderAt('/portafolio')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Portafolio' })).toBeInTheDocument()
+    expect(api.fetchCurrentUser).not.toHaveBeenCalled()
+  })
+
+  it('/portafolio/:slug carga el proyecto de ese slug', async () => {
+    vi.mocked(portfolioApi.fetchPublicProject).mockResolvedValue({
+      slug: 'boda', title: 'Boda en la playa', eyebrow: null, category: null, description: null, images: [],
+    })
+
+    renderAt('/portafolio/boda')
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Boda en la playa' })).toBeInTheDocument()
+    expect(portfolioApi.fetchPublicProject).toHaveBeenCalledWith('boda', expect.anything())
+    expect(api.fetchCurrentUser).not.toHaveBeenCalled()
+  })
+
+  it('/admin/portafolio está protegida: sin sesión lleva al login', async () => {
+    api.fetchCurrentUser.mockRejectedValue(new ApiError(401, 'Debes iniciar sesión para continuar.'))
+
+    renderAt('/admin/portafolio')
+
+    expect(await screen.findByRole('heading', { name: 'Acceso al Estudio' })).toBeInTheDocument()
   })
 })
 

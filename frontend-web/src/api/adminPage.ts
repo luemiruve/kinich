@@ -10,6 +10,12 @@ export type ItemFieldName = 'eyebrow' | 'categoryId' | 'title' | 'description'
 export type HeadingFieldName = 'eyebrow' | 'title' | 'body'
 /** Cómo se encuadra la imagen en la sección: rectángulo 4:5 o punto focal. */
 export type ItemFraming = 'CROP_4_5' | 'FOCAL_POINT'
+/** Páginas con secciones editables en el panel (slug de la ruta del backend). */
+export type PageKey = 'home' | 'portfolio'
+/** Secciones de Portafolio: solo cabecera editorial (D: el CMS solo gestiona PAGE_HEADER y CLOSING_CTA). */
+export type PortfolioSectionKey = 'page-header' | 'closing-cta'
+/** Cualquier sección con cabecera editable, de cualquier página. */
+export type HeadingSectionKey = SectionKey | PortfolioSectionKey
 
 export interface AdminTextBlock {
   id: string
@@ -63,6 +69,14 @@ export interface AdminPage {
   sections: AdminSection[]
 }
 
+/** En Portafolio las secciones solo tienen cabecera (sin textos ni elementos). */
+export type AdminPortfolioSection = Omit<AdminSection, 'sectionKey'> & { sectionKey: PortfolioSectionKey }
+
+export interface AdminPortfolioPage {
+  pageKey: 'portfolio'
+  sections: AdminPortfolioSection[]
+}
+
 export interface TextBlockValues {
   eyebrow: string
   title: string
@@ -87,7 +101,8 @@ export interface ItemValues {
   mediaPosition: FocalPoint | null
 }
 
-const BASE = '/api/admin/pages/home'
+const pageBase = (page: PageKey) => `/api/admin/pages/${page}`
+const BASE = pageBase('home')
 const texts = (section: TextSectionKey) => `${BASE}/sections/${section}/texts`
 const items = (section: ItemSectionKey) => `${BASE}/sections/${section}/items`
 
@@ -105,6 +120,10 @@ const toItemBody = (values: ItemValues) => ({
 
 export function fetchAdminHome(signal?: AbortSignal): Promise<AdminPage> {
   return request<AdminPage>(BASE, { signal })
+}
+
+export function fetchAdminPortfolioPage(signal?: AbortSignal): Promise<AdminPortfolioPage> {
+  return request<AdminPortfolioPage>(pageBase('portfolio'), { signal })
 }
 
 export function createTextBlock(section: TextSectionKey, values: TextBlockValues): Promise<AdminTextBlock> {
@@ -150,13 +169,15 @@ export function reorderItems(section: ItemSectionKey, revision: number, ids: str
   return request<void>(`${items(section)}/order`, { method: 'PUT', body: JSON.stringify({ revision, ids }) })
 }
 
-export function publishSection(section: TextSectionKey | ItemSectionKey, revision: number): Promise<void> {
-  return request<void>(`${BASE}/sections/${section}/publication`, { method: 'PUT', body: JSON.stringify({ revision }) })
+export function publishSection(section: TextSectionKey | ItemSectionKey | PortfolioSectionKey, revision: number,
+  page: PageKey = 'home'): Promise<void> {
+  return request<void>(`${pageBase(page)}/sections/${section}/publication`, { method: 'PUT', body: JSON.stringify({ revision }) })
 }
 
 /** Los campos vacíos van como null (borran el texto); los que la sección no admite nunca llegan con valor. */
-export function updateSectionHeading(section: SectionKey, values: HeadingValues, revision: number): Promise<unknown> {
-  return request(`${BASE}/sections/${section}/heading`, {
+export function updateSectionHeading(section: HeadingSectionKey, values: HeadingValues, revision: number,
+  page: PageKey = 'home'): Promise<unknown> {
+  return request(`${pageBase(page)}/sections/${section}/heading`, {
     method: 'PUT',
     body: JSON.stringify({
       eyebrow: values.eyebrow || null,
