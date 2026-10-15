@@ -5,6 +5,7 @@ import { AdminInicioPage } from '@/pages/AdminInicioPage'
 import { AdminSettingsPage } from '@/pages/AdminSettingsPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PublicHomePage } from '@/pages/PublicHomePage'
+import { PortfolioPage } from '@/portfolio/PortfolioPage'
 import { GuestOnly, LOGIN_PATH, RequireAuth } from '@/routes/guards'
 import { ADMIN_HOME } from '@/routes/safeRedirect'
 import { SessionProvider } from '@/session/SessionProvider'
@@ -25,6 +26,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<PublicHomePage />} />
+      <Route path="/portafolio" element={<PortfolioPage />} />
       <Route element={<AdminSession />}>
         <Route path={LOGIN_PATH} element={<GuestOnly><LoginPage /></GuestOnly>} />
         <Route path={ADMIN_HOME} element={<RequireAuth><AdminHomePage /></RequireAuth>} />
