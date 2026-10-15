@@ -22,6 +22,8 @@ public final class ContentTestData {
     }
 
     public static void reset(JdbcTemplate jdbc) {
+        jdbc.update("DELETE FROM published_portfolio_projects"); // cascada a sus imágenes
+        jdbc.update("DELETE FROM portfolio_projects"); // cascada a sus imágenes
         jdbc.update("DELETE FROM published_content_items");
         jdbc.update("DELETE FROM content_items");
         jdbc.update("DELETE FROM content_categories");
