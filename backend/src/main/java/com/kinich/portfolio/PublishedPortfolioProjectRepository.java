@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PublishedPortfolioProjectRepository extends JpaRepository<PublishedPortfolioProject, UUID> {
 
@@ -16,4 +18,13 @@ public interface PublishedPortfolioProjectRepository extends JpaRepository<Publi
     boolean existsBySlugAndSourceIdNot(String slug, UUID sourceId);
 
     boolean existsBySlug(String slug);
+
+    /**
+     * Serializa las publicaciones (proyecto y orden) hasta el fin de la transacción: dos primeras publicaciones a la
+     * vez calcularían la misma posición final, y publicar el orden a la vez que un proyecto renumeraría sobre datos
+     * viejos. Las lecturas simples (sitio público) no se bloquean.
+     */
+    @Modifying
+    @Query(value = "LOCK TABLE published_portfolio_projects IN EXCLUSIVE MODE", nativeQuery = true)
+    void lockForPublication();
 }

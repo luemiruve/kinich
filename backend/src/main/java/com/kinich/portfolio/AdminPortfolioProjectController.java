@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 class AdminPortfolioProjectController {
 
     private final PortfolioProjectService projects;
+    private final PortfolioPublicationService publication;
     private final AdminPortfolioReader reader;
 
     @GetMapping
@@ -57,6 +58,14 @@ class AdminPortfolioProjectController {
     AdminProjectResponse changeVisibility(@PathVariable UUID id, @Valid @RequestBody ProjectVisibilityRequest request,
                                           @AuthenticationPrincipal AuthenticatedUser user) {
         projects.changeVisibility(id, request.hidden(), request.version(), user.id());
+        return reader.project(id);
+    }
+
+    /** Publica o retira (si está oculto) este proyecto; no publica el orden de los demás (R-1). */
+    @PutMapping("/{id}/publication")
+    AdminProjectResponse publish(@PathVariable UUID id, @Valid @RequestBody ProjectPublicationRequest request,
+                                 @AuthenticationPrincipal AuthenticatedUser user) {
+        publication.publish(id, request.version(), user.id());
         return reader.project(id);
     }
 

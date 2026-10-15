@@ -39,6 +39,8 @@ public class PortfolioProjectService {
 
     @Transactional
     public PortfolioProject create(ProjectRequest request, UUID actorId) {
+        // Mismo orden de bloqueo que publicar: serializa el recuento (límite) y la posición max+1 entre creaciones.
+        published.lockForPublication();
         ProjectValues values = ProjectNormalizer.normalize(request);
         Crop crop = validate(values, null);
         if (projects.count() >= PortfolioLimits.MAX_PROJECTS) {
@@ -74,6 +76,10 @@ public class PortfolioProjectService {
     @Transactional
     public PortfolioProject changeVisibility(UUID id, boolean hidden, long version, UUID actorId) {
         PortfolioProject project = require(id, version);
+        if (project.isHidden() == hidden) {
+            // Sin cambio real: ni nueva revisión ni nueva versión.
+            return project;
+        }
         project.setHidden(hidden);
         project.setDraftRevision(project.getDraftRevision() + 1);
         projects.flush();
@@ -87,6 +93,9 @@ public class PortfolioProjectService {
      */
     @Transactional
     public void delete(UUID id, long version, UUID actorId) {
+        // Bloqueo antes de leer el borrador, como al publicar: sin interbloqueo con una publicación simultánea y con
+        // renumeraciones serializadas entre eliminaciones.
+        published.lockForPublication();
         projects.delete(require(id, version));
         projects.flush();
         List<PortfolioProject> remaining = projects.findAllByOrderByPositionAsc();

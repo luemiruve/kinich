@@ -9,19 +9,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Orden del borrador (D-15). Publicar el orden es una acción aparte. */
+/** Orden del borrador (D-15) y su publicación, una acción aparte a nivel de colección (R-1). */
 @RestController
-@RequestMapping("/api/admin/portfolio/projects/order")
+@RequestMapping("/api/admin/portfolio")
 @RequiredArgsConstructor
 class AdminPortfolioOrderController {
 
     private final PortfolioOrderService order;
     private final AdminPortfolioReader reader;
 
-    @PutMapping
+    @PutMapping("/projects/order")
     AdminProjectListResponse reorderDraft(@Valid @RequestBody ProjectOrderRequest request,
                                           @AuthenticationPrincipal AuthenticatedUser user) {
         order.reorderDraft(request.projects(), user.id());
+        return reader.list();
+    }
+
+    @PutMapping("/order/publication")
+    AdminProjectListResponse publishOrder(@Valid @RequestBody ProjectOrderRequest request,
+                                          @AuthenticationPrincipal AuthenticatedUser user) {
+        order.publishOrder(request.projects(), user.id());
         return reader.list();
     }
 }
