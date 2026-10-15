@@ -3,6 +3,7 @@ package com.kinich.portfolio;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ public interface PublishedPortfolioProjectRepository extends JpaRepository<Publi
 
     Optional<PublishedPortfolioProject> findBySourceId(UUID sourceId);
 
+    /** Instantánea y galería en una sola consulta: una republicación simultánea no deja una galería vacía. */
+    @EntityGraph(attributePaths = "images")
     Optional<PublishedPortfolioProject> findBySlug(String slug);
 
     List<PublishedPortfolioProject> findAllByOrderByPositionAsc();
