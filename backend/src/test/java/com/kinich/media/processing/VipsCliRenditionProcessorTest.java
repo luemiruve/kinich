@@ -80,6 +80,18 @@ class VipsCliRenditionProcessorTest {
     }
 
     @Test
+    void aPortraitOriginalIsConstrainedByWidthOnly() {
+        // Sin altura explícita, vips encajaba en una caja W×W: 900×1350 daba 512×768 para el ancho 768.
+        List<RenditionFile> files = processor().render(ImageFixtures.jpeg(900, 1350), MediaFormat.JPEG, 900);
+
+        assertThat(files).extracting(RenditionFile::width).containsExactly(480, 768, 480, 768);
+        for (RenditionFile file : files) {
+            assertThat(file.height()).isEqualTo(Math.round(file.width() * 1350 / 900f));
+            assertThat(new ImageInspector().inspect(file.content()).width()).isEqualTo(file.width());
+        }
+    }
+
+    @Test
     void readsWebpAndAvifOriginals() {
         assertThat(processor().render(ImageFixtures.resource("lossless.webp"), MediaFormat.WEBP, 16)).hasSize(2);
         assertThat(processor().render(ImageFixtures.resource("plain.avif"), MediaFormat.AVIF, 16)).hasSize(2);
